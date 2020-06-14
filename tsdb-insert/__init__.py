@@ -20,33 +20,27 @@ class TimescaleDB(object):
             execute_values(
                 cur,
                 """
-                INSERT INTO sensor_data (timestamp, category, value)
+                INSERT INTO sensor_data (timestamp, device, category, value, anomaly_score, is_anomaly)
                 VALUES %s
                 """,
                 records,
             )
             self.conn.commit()
+            logging.info('Inserted into TimescaleDB')
 
 
 def main(event: func.EventHubEvent):
     historian = TimescaleDB()
     logging.info('Python EventHub trigger processed')
     logging.info("object type:\t{}".format(type(event)))
-    logging.info("Data:\t{}".format(event.get_body().decode('utf-8')))
 
-    records = []
-    event = json.loads(event.get_body().decode('utf-8'))
-    iot_datetime = event.pop('timestamp')
-    record = [(iot_datetime, key, value) for key, value in event.items()]
-    records.extend(record)
+    events = event.get_body().decode('utf-8').splitlines()
+    to_send = []
+    for eventstring in events:
+        event = json.loads(eventstring)
+        record = []
+        for key, value in event.items():
+            record.append(value)
+        to_send.add(tuple(record))
+    historian.insert_sensor_records(to_send)
 
-    # Python doesn't seem to be working with cardinality 'many'
-    # records = []
-    # events = [eventrecord.get_body().decode('utf-8') for eventrecord in event]
-    # for event in events:
-    #     event = json.loads(event)
-    #     iot_datetime = event.pop('timestamp')
-    #     record = [(iot_datetime, key, value) for key, value in dict(event).items()]
-    #     records.extend(record)
-
-    historian.insert_sensor_records(records)

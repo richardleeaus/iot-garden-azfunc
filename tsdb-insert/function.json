@@ -5,8 +5,8 @@
       "type": "eventHubTrigger",
       "name": "event",
       "direction": "in",
-      "eventHubName": "iothub-ehub-richardpoc-328513-a3c41f9baf",
-      "connection": "eventhub_ENDPOINT",
+      "eventHubName": "anomalies",
+      "connection": "anomalies_eventhub_ENDPOINT",
       "cardinality": "one",
       "consumerGroup": "$Default"
     }
